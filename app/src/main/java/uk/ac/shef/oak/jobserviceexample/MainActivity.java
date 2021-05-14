@@ -11,7 +11,10 @@ import android.util.Log;
 
 import uk.ac.shef.oak.jobserviceexample.restarter.RestartServiceBroadcastReceiver;
 
+//import static org.graalvm.compiler.debug.DebugOptions.Log;
+
 public class MainActivity extends Activity {
+
 
     public static final String TAG = "MainActivity" ;
 
