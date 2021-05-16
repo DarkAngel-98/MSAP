@@ -5,7 +5,10 @@
 package uk.ac.shef.oak.jobserviceexample;
 
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
@@ -19,9 +22,13 @@ import uk.ac.shef.oak.jobserviceexample.utilities.Notification;
 
 public class Service extends android.app.Service {
     protected static final int NOTIFICATION_ID = 1337;
-    private static String TAG = "Service";
+    //private static String TAG = "Service";
+    private static String TAG = Service.class.getSimpleName() ;
     private static Service mCurrentService;
     private int counter = 0;
+
+    public static String ping = null;
+    private TimerTask timertask;
 
     public Service() {
         super();
@@ -55,11 +62,41 @@ public class Service extends android.app.Service {
             restartForeground();
         }
 
-        startTimer();
+        ConnectivityManager manager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = manager.getActiveNetworkInfo();
+
+        try{
+            if(networkInfo != null && networkInfo.isConnected())
+            {
+                startAsync();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+       // MISLAM DEKA TREBA DA SE TRGNE startTimer()
+        // startTimer();
 
         // return start sticky so if it is killed by android, it will be restarted with Intent null
         return START_STICKY;
     }
+
+    public void startAsync(){
+        Timer timer = new Timer();
+        initializeTimerTask();
+        timer.schedule(timertask,1000,120000);
+    }
+
+    public void initializeTimerTask() {
+
+        timertask = new TimerTask() {
+            @Override
+            public void run() {
+
+                new PingTask().execute();
+            }
+        };
+    }
+
 
 
     @Nullable
@@ -84,7 +121,8 @@ public class Service extends android.app.Service {
                 Notification notification = new Notification();
                 startForeground(NOTIFICATION_ID, notification.setNotification(this, "Service notification", "This is the service's notification", R.drawable.ic_sleep));
                 Log.i(TAG, "restarting foreground successful");
-                startTimer();
+                //startTimer();
+                new PingTask().execute();
             } catch (Exception e) {
                 Log.e(TAG, "Error in notification " + e.getMessage());
             }
@@ -99,7 +137,8 @@ public class Service extends android.app.Service {
         // restart the never ending service
         Intent broadcastIntent = new Intent(Globals.RESTART_INTENT);
         sendBroadcast(broadcastIntent);
-        stoptimertask();
+        //stoptimertask();
+        new PingTask().execute() ;
     }
 
 
@@ -122,10 +161,9 @@ public class Service extends android.app.Service {
         // stoptimertask();
     }
 
-
+    /*
     /**
      * static to avoid multiple timers to be created when the service is called several times
-     */
     private static Timer timer;
     private static TimerTask timerTask;
     long oldTime = 0;
@@ -144,22 +182,9 @@ public class Service extends android.app.Service {
         //schedule the timer, to wake up every 1 second
         timer.schedule(timerTask, 1000, 1000); //
     }
+    */
 
-    /**
-     * it sets the timer to print the counter every x seconds
-     */
-    public void initializeTimerTask() {
-        Log.i(TAG, "initialising TimerTask");
-        timerTask = new TimerTask() {
-            public void run() {
-                Log.i("in timer", "in timer ++++  " + (counter++));
-            }
-        };
-    }
-
-    /**
-     * not needed
-     */
+    /*
     public void stoptimertask() {
         //stop the timer, if it's not already null
         if (timer != null) {
@@ -167,6 +192,8 @@ public class Service extends android.app.Service {
             timer = null;
         }
     }
+
+     */
 
     public static Service getmCurrentService() {
         return mCurrentService;
