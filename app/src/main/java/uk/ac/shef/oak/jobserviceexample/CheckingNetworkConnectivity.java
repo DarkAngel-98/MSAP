@@ -16,37 +16,26 @@ import java.net.URL;
 
 
 public class CheckingNetworkConnectivity {
-    Context context ;
-    public static final String TAG = CheckingNetworkConnectivity.class.getSimpleName() ;
-  // TAG ne raboti so:
-  //public static final String TAG = "CheckingNetworkConnectivity" ;
+    //Context context ;
+    public static final String TAG = "NETWORK" ;
+    //static String data = "" ;
+    static String singleParse = "" ;
+    static String finalParse = "" ;
+
     CheckingNetworkConnectivity(){
         // prazen konstruktot
     }
-    // pravime proverka za konektivnost:
-    /*
-    public static boolean isWifiConnected(Context context) {
-        ConnectivityManager manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo info = manager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-        if(info != null && info.isConnected() && info.isAvailable()) {
-            Toast.makeText(context, "Connection is Established", Toast.LENGTH_SHORT).show();
-            return true;
-        }
-        else {
-            Toast.makeText(context, "Connection is NOT Established", Toast.LENGTH_SHORT).show();
-            return false;
-        }
-    }
 
-     */
 
-    // sega otkako ja proverivme konekcijata, mozhe da prezememe info od backend-ot:
+
 
     static String getBackendInfo(){
+        Log.i(TAG, "Vnatre vo backendInfo") ;
         /*
         //String pom = "https://www.json-generator.com/api/json/get/cfYwknRxFe?indent=2" ;
             // http://10.0.2.2:5000/getjobs
             // http://localhost:5000/getjobs
+            // http://192.168.0.105:5000/getjobs/hardware   ... faza3_fizicki ured
             URL url = new URL("https://www.json-generator.com/api/json/get/cfYwknRxFe?indent=2") ; // ja zemame adresata
             HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection(); // otvorame konekcija na dadena adresa
             httpURLConnection.setRequestMethod("GET");
@@ -55,33 +44,31 @@ public class CheckingNetworkConnectivity {
          */
         HttpURLConnection httpURLConnection = null;
         BufferedReader bufferedReader = null;
-        String JSONString;
+        String data = "";
         try{
 
-            Uri builtUri = Uri.parse("http://10.0.2.2:5000/getjobs")
-                    .buildUpon()
-                    .build();
+            URL url = new URL("http://192.168.0.105:5000/getjobs/hardware") ;
 
-            Log.i(TAG,"Connecting to http://10.0.2.2:5000/getjobs");
+            //Log.i(TAG,"Connecting to http://10.0.2.2:5000/getjobs");
+            Log.i(TAG,"Connecting to http://192.168.0.105:5000/getjobs/hardware");
 
-            URL requestUrl = new URL(builtUri.toString());
-            httpURLConnection = (HttpURLConnection) requestUrl.openConnection();
+
+            httpURLConnection = (HttpURLConnection) url.openConnection();
             httpURLConnection.setRequestMethod("GET");
             httpURLConnection.connect();
             Log.i(TAG,"Connected");
 
             InputStream inputStream = httpURLConnection.getInputStream();
-            StringBuilder buffer = new StringBuilder();
+            bufferedReader = new BufferedReader(new InputStreamReader(inputStream)) ;
 
-            bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-
-            String line;
-            while((line = bufferedReader.readLine()) != null)
+            String line = "";
+            while(line != null)
             {
-                buffer.append(line);
-                buffer.append("\n");
+                line = bufferedReader.readLine() ;
+                data = data + line ;
+                Log.i(TAG, data) ;
             }
-            JSONString=buffer.toString();
+
         }catch (IOException e){
             e.printStackTrace();
             return null;
@@ -98,7 +85,7 @@ public class CheckingNetworkConnectivity {
                 }
             }
         }
-        Log.i("KRAEN_STRING",JSONString);
-        return JSONString;
+        Log.i(TAG,data);
+        return data;
     }
 }

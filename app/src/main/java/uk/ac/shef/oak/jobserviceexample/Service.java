@@ -7,6 +7,7 @@ package uk.ac.shef.oak.jobserviceexample;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
@@ -23,11 +24,15 @@ import uk.ac.shef.oak.jobserviceexample.utilities.Notification;
 public class Service extends android.app.Service {
     protected static final int NOTIFICATION_ID = 1337;
     //private static String TAG = "Service";
-    private static String TAG = Service.class.getSimpleName() ;
+    private static String TAG = "SERVICE";
     private static Service mCurrentService;
     private int counter = 0;
 
-    public static String ping = null;
+    public int brojacZaSaveData = 0 ;
+    public static final String SHARED_PREFS = "sharedPrefs" ;
+    public static final String PING_RESULT = "PING_RESULT" ;
+
+    public static String pingResult = null;
     private TimerTask timertask;
 
     public Service() {
@@ -48,7 +53,7 @@ public class Service extends android.app.Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
         Log.d(TAG, "restarting Service !!");
-        counter = 0;
+        //counter = 0;
 
         // it has been killed by Android and now it is restarted. We must make sure to have reinitialised everything
         if (intent == null) {
@@ -68,7 +73,15 @@ public class Service extends android.app.Service {
         try{
             if(networkInfo != null && networkInfo.isConnected())
             {
+                Log.i(TAG, "Connected") ;
                 startAsync();
+            }
+            else{
+                brojacZaSaveData ++ ;
+                if(brojacZaSaveData <= 3)
+                for(int i = 0;i<brojacZaSaveData;i++) {
+                    saveData();
+                }
             }
         }catch (Exception e){
             e.printStackTrace();
@@ -83,7 +96,10 @@ public class Service extends android.app.Service {
     public void startAsync(){
         Timer timer = new Timer();
         initializeTimerTask();
-        timer.schedule(timertask,1000,120000);
+        Log.i(TAG, "Setting timer!") ;
+        timer.schedule(timertask,1000,10000);
+        // period: 120 000 (potsetnik).... 10 000 e za testiranje staveno
+        Log.i(TAG, "Timer set!") ;
     }
 
     public void initializeTimerTask() {
@@ -92,9 +108,30 @@ public class Service extends android.app.Service {
             @Override
             public void run() {
 
+                Log.i(TAG, "Before PingTask executes ...") ;
                 new PingTask().execute();
+                Log.i(TAG, "After we execute PingTask with PingTask().execute() ....") ;
+
+                Log.i(TAG, "We start HttpPost with HttpPost().execute() .... ") ;
+                new HttpPost().execute() ;
+                Log.i(TAG, "We finish with HttpPost().execute() . ") ;
+
             }
         };
+    }
+
+    public void saveData(){
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE) ;
+        // MODE_PRIVATE znachi deka ne mozhe druga aplikacija da promeni toa shto imame zachuvano.
+        SharedPreferences.Editor editor = sharedPreferences.edit() ;
+        editor.putString(PING_RESULT, pingResult) ;
+        editor.apply();
+    }
+
+    public String loadData(){
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE) ;
+        String zachuvanPing = sharedPreferences.getString(SHARED_PREFS, "") ;
+        return zachuvanPing ;
     }
 
 
@@ -161,39 +198,6 @@ public class Service extends android.app.Service {
         // stoptimertask();
     }
 
-    /*
-    /**
-     * static to avoid multiple timers to be created when the service is called several times
-    private static Timer timer;
-    private static TimerTask timerTask;
-    long oldTime = 0;
-
-    public void startTimer() {
-        Log.i(TAG, "Starting timer");
-
-        //set a new Timer - if one is already running, cancel it to avoid two running at the same time
-        stoptimertask();
-        timer = new Timer();
-
-        //initialize the TimerTask's job
-        initializeTimerTask();
-
-        Log.i(TAG, "Scheduling...");
-        //schedule the timer, to wake up every 1 second
-        timer.schedule(timerTask, 1000, 1000); //
-    }
-    */
-
-    /*
-    public void stoptimertask() {
-        //stop the timer, if it's not already null
-        if (timer != null) {
-            timer.cancel();
-            timer = null;
-        }
-    }
-
-     */
 
     public static Service getmCurrentService() {
         return mCurrentService;
