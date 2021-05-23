@@ -68,6 +68,9 @@ public class HttpPost extends AsyncTask<Void, Void, String> {
                     //System.out.println(response.toString());
                     Log.i(TAG, "response is: " + response.toString());
                 }
+                Log.i(TAG, "Response message: " + connectionPost.getResponseCode() + " " + connectionPost.getResponseMessage()) ;
+                //Log.i(TAG, "Response message: " + connectionPost.getResponseMessage()) ;
+
 
         } catch (MalformedURLException e) {
             e.printStackTrace();
